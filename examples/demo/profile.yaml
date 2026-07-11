@@ -1,0 +1,39 @@
+# 演示 Profile（脱敏，非真实投递身份）
+
+schema_version: 1
+identity:
+  name: 示例同学
+  phone: "13800000000"
+  email: demo@example.com
+  github: https://github.com/example
+education:
+  - school: 示例大学
+    major: 计算机科学
+    degree: 本科
+    grade_or_grad_year: 大三
+skills:
+  - Python
+  - Pandas
+  - SQL
+  - PyTorch
+directions:
+  - 数据分析
+  - AI Agent
+highlights:
+  - title: 示例数据分析项目
+    skills: [Python, Pandas]
+    metrics: ["1万条样本"]
+    blurb: 完成数据采集、清洗与可视化看板（示例数据，请替换为你的真实经历）
+  - title: 示例 Agent 工作流
+    skills: [Python, Prompt]
+    metrics: []
+    blurb: 使用 LLM 工具调用完成信息汇总自动化（示例）
+constraints:
+  cities:
+    - 示例市
+  available_from: "2026年8月"
+  available_duration: "3-6个月"
+  exclude_companies:
+    - 示例大厂A
+  exclude_keywords: []
+raw_text_excerpt: ""

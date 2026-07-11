@@ -13,13 +13,15 @@ config.yaml
 .env
 .env.*
 !.env.example
-profile.yaml
-profile.json
+/profile.yaml
+/profile.json
 *.pdf
 !examples/**/*.md
+!examples/**/*.yaml
+!examples/**/*.csv
 
 # Runtime data
-data/
+data/*
 !data/.gitkeep
 runs/
 tmp/
