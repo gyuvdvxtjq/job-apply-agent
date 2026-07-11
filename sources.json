@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "description": "求职公开信息源注册表。启动时可 health check；死源跳过。不含需登录的 BOSS/猎聘等。用户可通过 config 追加 university_career / imports。",
+  "layers": {
+    "L0": "宿主搜索（Claude WebSearch / tinyfish / 其他 MCP）— Skill 侧调用",
+    "L1": "plan 定向源（指定公司 careers、指定就业网）",
+    "L2": "元搜索 SearXNG（可选，config.sources.searxng）",
+    "L3": "本表 curated sources + careers 路径探测",
+    "L4": "线索不足时的拓宽兜底（更多城市/同义词）"
+  },
+  "sources": [
+    {
+      "id": "shixiseng",
+      "name": "实习僧",
+      "type": "job_board",
+      "layer": "L3",
+      "lang": ["zh"],
+      "url_template": "https://www.shixiseng.com/interns?keyword={query}",
+      "health_url": "https://www.shixiseng.com/",
+      "priority": 1,
+      "notes": "实习垂直；页面结构可能变化，适配器需容错"
+    },
+    {
+      "id": "yingjiesheng",
+      "name": "应届生求职网",
+      "type": "job_board",
+      "layer": "L3",
+      "lang": ["zh"],
+      "url_template": "https://www.yingjiesheng.com/search.php?word={query}",
+      "health_url": "https://www.yingjiesheng.com/",
+      "priority": 1,
+      "notes": "校招/实习帖常见公开邮箱"
+    },
+    {
+      "id": "nowcoder_schedule",
+      "name": "牛客校招日程",
+      "type": "job_board",
+      "layer": "L3",
+      "lang": ["zh"],
+      "url_template": "https://www.nowcoder.com/jobs/school/schedule",
+      "health_url": "https://www.nowcoder.com/",
+      "priority": 2,
+      "notes": "日程与讨论区线索；完整投递页可能需登录，只采公开信息"
+    },
+    {
+      "id": "v2ex_jobs",
+      "name": "V2EX 酷工作",
+      "type": "community",
+      "layer": "L3",
+      "lang": ["zh"],
+      "url_template": "https://www.v2ex.com/go/jobs",
+      "health_url": "https://www.v2ex.com/",
+      "priority": 2,
+      "notes": "技术向中小团队；注意过滤中介"
+    },
+    {
+      "id": "github_code_search_hiring",
+      "name": "GitHub hiring 信号",
+      "type": "community",
+      "layer": "L3",
+      "lang": ["en", "zh"],
+      "url_template": "https://github.com/search?q={query}+hiring+internship&type=repositories",
+      "health_url": "https://github.com/",
+      "priority": 3,
+      "notes": "小团队/开源周边"
+    },
+    {
+      "id": "speedyapply_ai_jobs",
+      "name": "SpeedyApply AI College Jobs",
+      "type": "curated_list",
+      "layer": "L3",
+      "lang": ["en"],
+      "url_template": "https://github.com/speedyapply/2027-AI-College-Jobs",
+      "health_url": "https://github.com/speedyapply/2027-AI-College-Jobs",
+      "priority": 3,
+      "notes": "偏海外/远程，可筛 remote"
+    },
+    {
+      "id": "web_general_zh",
+      "name": "通用中文检索模板",
+      "type": "search_query",
+      "layer": "L0",
+      "lang": ["zh"],
+      "query_templates": [
+        "{direction} 实习 {city} 邮箱",
+        "{direction} 实习生 招聘 简历投递 {city}",
+        "{direction} 校招 实习 campus@ {city}",
+        "AIGC 实习生 简历 {city}",
+        "AI Agent 实习 投递邮箱",
+        "数据分析 实习 HR邮箱 {city}"
+      ],
+      "priority": 1
+    },
+    {
+      "id": "company_discovery_zh",
+      "name": "小公司发现查询",
+      "type": "search_query",
+      "layer": "L4",
+      "lang": ["zh"],
+      "query_templates": [
+        "{city} 高新区 AI 公司 招聘 实习",
+        "{city} 软件园 招聘 实习生 邮箱",
+        "{direction} 创业公司 实习 投递",
+        "{city} 双选会 参展企业 {direction}"
+      ],
+      "priority": 2,
+      "notes": "用于发现公司，再解析 careers/联系方式"
+    },
+    {
+      "id": "careers_path_probe",
+      "name": "官网 careers 路径",
+      "type": "careers",
+      "layer": "L1",
+      "lang": ["zh", "en"],
+      "path_hints": ["/careers", "/campus", "/join-us", "/recruit", "/jobs", "/about/join"],
+      "priority": 1
+    }
+  ],
+  "blocked_domains": [
+    "zhipin.com",
+    "www.zhipin.com",
+    "liepin.com",
+    "www.liepin.com",
+    "linkedin.com",
+    "www.linkedin.com",
+    "maimai.cn"
+  ],
+  "email_local_part_priority": [
+    "campus",
+    "hr",
+    "jobs",
+    "job",
+    "recruit",
+    "career",
+    "careers",
+    "internship",
+    "intern",
+    "apply",
+    "talent",
+    "zhaopin"
+  ]
+}

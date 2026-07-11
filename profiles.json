@@ -1,0 +1,29 @@
+{
+  "quick": {
+    "description": "少关键词、少源、快速出少量 ready 线索",
+    "target_leads": 10,
+    "max_search_queries": 6,
+    "enable_layers": ["L0", "L3"],
+    "min_match_score": 0.35,
+    "write_bodies": true,
+    "auto_send": false
+  },
+  "standard": {
+    "description": "多层并行采集，默认完整准备求职信，不发送",
+    "target_leads": 25,
+    "max_search_queries": 16,
+    "enable_layers": ["L0", "L1", "L2", "L3"],
+    "min_match_score": 0.4,
+    "write_bodies": true,
+    "auto_send": false
+  },
+  "deep": {
+    "description": "更多查询与源、更严匹配，适合挖小公司",
+    "target_leads": 40,
+    "max_search_queries": 28,
+    "enable_layers": ["L0", "L1", "L2", "L3", "L4"],
+    "min_match_score": 0.45,
+    "write_bodies": true,
+    "auto_send": false
+  }
+}

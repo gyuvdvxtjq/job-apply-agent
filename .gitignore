@@ -1,0 +1,37 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+
+# Local secrets & personal data (never commit)
+config.yaml
+.env
+.env.*
+!.env.example
+profile.yaml
+profile.json
+*.pdf
+!examples/**/*.md
+
+# Runtime data
+data/
+!data/.gitkeep
+runs/
+tmp/
+.tmpdir/
+*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Claude local
+.claude/settings.local.json

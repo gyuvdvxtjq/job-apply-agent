@@ -1,0 +1,67 @@
+# job-apply-agent 本地配置（本文件已被 .gitignore，勿提交）
+# 复制自 config.example.yaml 后填写
+
+smtp:
+  server: smtp.example.com
+  port: 465
+  email: you@example.com
+  # 推荐用环境变量 SMTP_PASSWORD，不要把授权码写进仓库
+  password: ""
+  use_ssl: true
+
+resume:
+  path: ./resume.pdf
+  display_name: resume.pdf
+
+# 若已有 profile.yaml 可只填路径；否则由 parse-resume 生成
+profile_path: ./profile.yaml
+
+user_overrides:
+  # 覆盖简历推断结果（可选）
+  cities: []
+  directions: []
+  available_from: ""
+  available_duration: ""
+  exclude_companies: []
+  exclude_keywords: []
+
+sources:
+  # L0：宿主搜索（Claude WebSearch / tinyfish 等）由 Skill 调用，这里只做开关
+  web_search:
+    enabled: true
+  # L2：可选元搜索（自建或公共 SearXNG）
+  searxng:
+    enabled: false
+    base_url: ""
+  # L1/L3：用户自定义高校就业网（学校不同只改这里）
+  university_career:
+    enabled: true
+    portals: []
+    # 示例:
+    # - name: "某大学就业网"
+    #   list_url: "https://job.example.edu.cn/..."
+  # 公司 careers 模板（{company_domain} 由计划阶段填充）
+  careers:
+    enabled: true
+    path_hints:
+      - /careers
+      - /campus
+      - /join-us
+      - /recruit
+      - /jobs
+  # 本地导入：双选会名单 / 园区企业表（CSV/JSON）
+  imports:
+    enabled: true
+    paths: []
+    # - ./data/imports/job_fair.csv
+
+pipeline:
+  profile: standard          # quick | standard | deep
+  auto_send: false           # 永远默认 false；发送须显式 CLI/确认
+  send_interval_seconds: 5
+  max_emails_per_day: 30
+  require_source_url: true
+  require_email_context: true
+
+run:
+  work_dir: ./runs           # 每次 run 的中间文件目录
