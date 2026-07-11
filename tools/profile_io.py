@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-from common import write_text
+from common import repo_root
 
 PROFILE_SCHEMA_VERSION = 1
 

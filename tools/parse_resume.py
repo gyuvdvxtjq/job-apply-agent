@@ -36,7 +36,7 @@ SKILL_LEXICON = [
     "Pandas", "NumPy", "PyTorch", "TensorFlow", "Spark", "PySpark",
     "Docker", "Kubernetes", "Linux", "Git", "FastAPI", "Flask", "Django",
     "React", "Vue", "LangChain", "Claude", "OpenAI", "RAG", "Prompt",
-    "Excel", "Tableau", "PowerBI", "R ", "Shiny", "MATLAB",
+    "Excel", "Tableau", "PowerBI", "Shiny", "MATLAB",
 ]
 
 
@@ -91,10 +91,12 @@ def _guess_skills(text: str) -> list[str]:
     found = []
     lower = text.lower()
     for sk in SKILL_LEXICON:
-        token = sk.strip()
-        if token.lower() in lower or token in text:
-            if token.strip() not in found:
-                found.append(token.strip())
+        if sk.lower() in lower or sk in text:
+            if sk not in found:
+                found.append(sk)
+    # R language: match as whole word to avoid false positives
+    if re.search(r'\bR\b', text) and "R" not in found:
+        found.append("R")
     return found
 
 

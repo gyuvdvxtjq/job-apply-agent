@@ -11,16 +11,6 @@ import yaml
 from common import env_or, repo_root
 
 
-def _deep_merge(base: dict, override: dict) -> dict:
-    out = dict(base)
-    for k, v in (override or {}).items():
-        if isinstance(v, dict) and isinstance(out.get(k), dict):
-            out[k] = _deep_merge(out[k], v)
-        else:
-            out[k] = v
-    return out
-
-
 def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
     root = repo_root()
     if config_path is None:

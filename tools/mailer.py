@@ -67,7 +67,6 @@ class Mailer:
                 else:
                     print(f"[失败] {company} ({to_email}) — {exc}")
                     return False
-        return False
 
     def send_batch(self, leads_list: list, interval: int = 5) -> dict:
         results = {"sent": 0, "failed": 0, "details": []}

@@ -123,6 +123,14 @@ class JobLeads:
         self._save()
         return True
 
+    def update_field(self, lead_id: int, key: str, value: Any) -> bool:
+        lead = self.get(lead_id)
+        if not lead:
+            return False
+        lead[key] = value
+        self._save()
+        return True
+
     def mark_sent(self, lead_id: int) -> bool:
         lead = self.get(lead_id)
         if not lead:

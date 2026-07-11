@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 # tools/ as sys.path root when executed as python tools/cli.py
@@ -108,7 +109,7 @@ def cmd_draft(args):
         lead2 = leads.get(lead["id"])
         if lead2 is not None:
             lead2["match_score"] = m["score"]
-            leads._save()
+            leads.update_field(lead["id"], "match_score", m["score"])
         print(f"📝 #{lead['id']} → ready (score={m['score']})")
         n += 1
     print(f"✅ 生成 {n} 封求职信骨架。请审查后 send。")
@@ -251,6 +252,12 @@ def cmd_send_all(args):
     for x in ready:
         print(f"  #{x['id']} {x.get('company')} <{x.get('contact_email')}>")
     mailer = Mailer(cfg=cfg)
+    try:
+        pp = resolve_path(cfg, cfg.get("profile_path") or "profile.yaml")
+        if pp.exists():
+            mailer.set_user_name(load_profile(pp).get("identity", {}).get("name") or "")
+    except Exception:
+        pass
     interval = int((cfg.get("pipeline") or {}).get("send_interval_seconds") or 5)
     for lead in ready:
         if sent_log.is_sent(lead["contact_email"]):
@@ -267,7 +274,6 @@ def cmd_send_all(args):
             sent_log.add(lead["contact_email"], lead.get("company") or "", lead.get("job_title") or "")
         else:
             leads.mark_failed(lead["id"], "smtp failed")
-        import time
         time.sleep(interval)
     return 0
 

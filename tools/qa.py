@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-from common import ensure_utf8_stdio, repo_root
+from common import ensure_utf8_stdio, read_json, repo_root
 from config_loader import load_config, resolve_path
 from extract import looks_like_public_mail_provider
 from match import is_excluded_company, match_score
@@ -91,7 +91,6 @@ def main(argv: list[str] | None = None) -> int:
 
     knobs = {}
     try:
-        from common import read_json
         profiles = read_json(repo_root() / "profiles.json", default={}) or {}
         name = (cfg.get("pipeline") or {}).get("profile") or "standard"
         knobs = profiles.get(name) or {}

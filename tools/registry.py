@@ -28,6 +28,8 @@ class SourceRegistry:
         items = self.sources
         if layer:
             items = [s for s in items if s.get("layer") == layer]
+        if enabled_only:
+            items = [s for s in items if s.get("enabled", True)]
         return items
 
     def is_blocked_url(self, url: str) -> bool:
