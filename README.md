@@ -1,8 +1,36 @@
 # job-apply-agent
 
-> 填好简历 + SMTP，自动搜集岗位线索、生成求职信、审查后发送。
->
-> **默认不会自动发送任何邮件**——所有线索停在 `ready` 状态，你审查后才 `send --confirm`。
+一个开源的 AI 求职助手。你只需要准备一份简历 PDF 和一个 SMTP 邮箱，它就能自动完成：**搜索岗位 → 匹配 JD → 生成针对性求职信 → 等你审查后发送**。
+
+整个流程由 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 驱动——Claude 作为 AI Agent 调度 Python CLI 工具链，你不需要手动执行任何命令。
+
+> **安全承诺**：默认不会自动发送任何邮件。所有线索停在 `ready` 状态，你审查后才 `send --confirm`。
+
+---
+
+## 一键开始（粘贴给 Claude Code）
+
+安装好依赖后，把下面这段话粘贴到 Claude Code 里，AI 会自动帮你走完全流程：
+
+```
+读取本项目的 SKILL.md，按照里面的调度流程执行求职投递任务。
+
+前置检查：
+1. 如果没有 config.yaml，帮我从 config.example.yaml 复制一份，然后提示我填写 SMTP 和简历路径
+2. 如果没有 profile.yaml，运行 parse-resume 解析我的简历 PDF，然后让我确认/补充城市和求职方向
+
+确认配置就绪后，依次执行：
+- Plan：生成搜索计划（standard 档）
+- Collect：按计划多渠道采集岗位线索和邮箱
+- Draft：为每条线索生成针对性求职信
+- QA：过滤低质量线索
+
+最后用 list --status ready 展示所有待发送线索给我审查。不要自动发送。
+```
+
+> 你也可以只粘贴其中一步，比如 `帮我采集这个页面的岗位：https://某公司.com/careers`。
+
+---
 
 ## 它能做什么
 
@@ -32,7 +60,9 @@
 1. 一份 PDF 简历
 2. 一个能发邮件的 SMTP 账号（QQ邮箱、Outlook 等均可）
 
-## 快速开始
+## 快速开始（手动 CLI）
+
+> 不用 Claude Code？也可以手动一步步操作。
 
 ### 安装
 
@@ -89,8 +119,6 @@ python tools/cli.py collect --url "https://某公司.com/careers"
 python tools/cli.py add --company "某科技" --job "数据分析实习" \
   --email "hr@example.com" --jd "需要Python" --source "https://..."
 ```
-
-如果你用 Claude Code，可以加载 `SKILL.md` 让 AI 自动搜索并批量采集。
 
 **第四步：生成求职信**
 
