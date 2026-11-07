@@ -103,13 +103,8 @@ def cmd_draft(args):
             source_hint=lead.get("source_url") or "",
         )
         m = match_score(profile, f"{lead.get('job_title')}\n{lead.get('jd_summary')}")
-        lead["match_score"] = m["score"]
         leads.set_body(lead["id"], body)
-        # persist match_score
-        lead2 = leads.get(lead["id"])
-        if lead2 is not None:
-            lead2["match_score"] = m["score"]
-            leads.update_field(lead["id"], "match_score", m["score"])
+        leads.update_field(lead["id"], "match_score", m["score"])
         print(f"📝 #{lead['id']} → ready (score={m['score']})")
         n += 1
     print(f"✅ 生成 {n} 封求职信骨架。请审查后 send。")
