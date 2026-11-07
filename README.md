@@ -1,229 +1,110 @@
-# job-apply-agent
+# JobMatch-Agent 🎯
 
-一个开源的 AI 求职助手。你只需要准备一份简历 PDF 和一个 SMTP 邮箱，它就能自动完成：**搜索岗位 → 匹配 JD → 生成针对性求职信 → 等你审查后发送**。
+**校招岗位匹配与求职信生成 Agent** —— 简历与岗位的语义匹配、辅助投递决策。
 
-整个流程由 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 驱动——Claude 作为 AI Agent 调度 Python CLI 工具链，你不需要手动执行任何命令。
+> 定位是**匹配与辅助决策**，不是自动海投工具：邮件发送保留但弱化，
+> 必须人工确认（`send --confirm`），审批闸门不暴露给模型作为工具。
 
-> **安全承诺**：默认不会自动发送任何邮件。所有线索停在 `ready` 状态，你审查后才 `send --confirm`。
-
----
-
-## 一键开始（粘贴给 Claude Code）
-
-安装好依赖后，把下面这段话粘贴到 Claude Code 里，AI 会自动帮你走完全流程：
-
-```
-读取本项目的 SKILL.md，按照里面的调度流程执行求职投递任务。
-
-前置检查：
-1. 如果没有 config.yaml，帮我从 config.example.yaml 复制一份，然后提示我填写 SMTP 和简历路径
-2. 如果没有 profile.yaml，运行 parse-resume 解析我的简历 PDF，然后让我确认/补充城市和求职方向
-
-确认配置就绪后，依次执行：
-- Plan：生成搜索计划（standard 档）
-- Collect：按计划多渠道采集岗位线索和邮箱
-- Draft：为每条线索生成针对性求职信
-- QA：过滤低质量线索
-
-最后用 list --status ready 展示所有待发送线索给我审查。不要自动发送。
-```
-
-> 你也可以只粘贴其中一步，比如 `帮我采集这个页面的岗位：https://某公司.com/careers`。
+由旧项目 [job-apply-agent](https://github.com/gyuvdvxtjq/job-apply-agent)（Claude Code 宿主 + 规则 CLI）改造而来，保留原 CLI 可用，新能力以新模块加入。设计决策与面试追问点见 [docs/DESIGN.md](docs/DESIGN.md)。
 
 ---
 
-## 它能做什么
+## 核心能力
+
+| 能力 | 实现 | 入口 |
+|---|---|---|
+| 自研 Agent 编排 | LangGraph 状态图：规划→检索→抽取→匹配评分→生成→质检，质检不过回退重写（上限可配），SQLite checkpointer 持久化、中断恢复，人工审批 interrupt 闸门 | `tools/cli.py graph run/resume/status` |
+| 岗位 RAG | 按「职责/要求/其他」语义分块 → bge-m3 向量入 Chroma → BM25(jieba) 混合召回 + RRF 融合 → bge-reranker-v2-m3 重排（可配置关） | `tools/cli.py rag-ingest / search` |
+| 结构化抽取 | 七字段（公司/岗位/城市/学历/技术栈/截止/投递方式），Pydantic 校验，校验错误回喂重试，失败率入日志 | `tools/cli.py extract-jd` |
+| 评测 | 43 条真实公开 JD 数据集 + 人工标注工具 + 四个脚本（Recall@5/MRR 三组对比、匹配 P/R/F1、字段准确率、质检回退率/耗时/token 成本） | `eval/`（见 eval/README.md） |
+| 服务化 | FastAPI（search / match / **SSE 流式生成**）+ Streamlit 演示页；每次模型调用记录 token/耗时 | `service/` |
+| 安全 | 发送需显式 `--confirm` + 每日限频强制执行；审批是 LangGraph interrupt 而非模型工具；Web 层无任何写端点；密钥只进 `.env` | — |
+
+## 架构
 
 ```
-你的简历 PDF ──> 解析为 profile.yaml
-                        │
-              ┌─────────┴──────────┐
-              │      Plan 阶段      │  生成搜索计划
-              └─────────┬──────────┘
-                        │
-              ┌─────────┴──────────┐
-              │    Collect 阶段     │  多渠道搜集岗位 + 邮箱
-              └─────────┬──────────┘
-                        │
-              ┌─────────┴──────────┐
-              │     Draft 阶段      │  按 JD 生成针对性求职信
-              └─────────┬──────────┘
-                        │
-              ┌─────────┴──────────┐
-              │      QA 阶段       │  过滤低质线索
-              └─────────┬──────────┘
-                        │
-                  你审查 → send
+                ┌────────────────────────────────────────────┐
+   简历 PDF ──▶ │ parse_resume → profile.yaml（技能/方向/证据） │
+                └────────────────────────────────────────────┘
+                                   │
+   公开 JD ──▶ collect ──▶ rag-ingest ──▶ Chroma ◀── jieba BM25
+                                   │              │
+                ┌──────────────────▼──────────────▼─────────┐
+                │        LangGraph 流水线（tools/graph.py）     │
+                │  plan → retrieve → extract → match(LLM)     │
+                │        ↓ (低分→跳过)                          │
+                │       draft ──▶ qa ──┬─ 不过→回退 draft(≤N次) │
+                │                      └─ 通过→ finalize       │
+                │             interrupt ▼                     │
+                │      人工审批（CLI graph resume）             │
+                └──────────────────┬─────────────────────────┘
+                                   │ ready（仍需 send --confirm）
+                ┌──────────────────▼─────────────────────────┐
+                │  FastAPI: /search /match /generate(SSE)     │
+                │  Streamlit 演示页（只读看板）                  │
+                └────────────────────────────────────────────┘
 ```
 
-**你只需准备两样东西：**
-1. 一份 PDF 简历
-2. 一个能发邮件的 SMTP 账号（QQ邮箱、Outlook 等均可）
+默认模型：DeepSeek（OpenAI 兼容协议，自研 httpx 客户端，不引 SDK）；
+embedding/rerank：硅基流动 `bge-m3` / `bge-reranker-v2-m3`。全部走 `.env` 配置，可一键切换供应商。
 
-## 快速开始（手动 CLI）
-
-> 不用 Claude Code？也可以手动一步步操作。
-
-### 安装
+## 快速开始
 
 ```bash
-git clone https://github.com/gyuvdvxtjq/job-apply-agent.git
-cd job-apply-agent
-pip install -r requirements.txt
-```
+# Python 3.10+（注意：用官方/uv 管理的干净解释器，Anaconda 父解释器
+# 会导致 chromadb 的 Rust 扩展段错误，见 DESIGN.md §3.4）
+python -m venv .venv && pip install -r requirements.txt
 
-### 配置（3 分钟）
-
-```bash
+cp .env.example .env        # 填 LLM_API_KEY / SILICONFLOW_API_KEY
 cp config.example.yaml config.yaml
-```
 
-打开 `config.yaml`，填写：
+# 1) 岗位入库 + 自然语言检索
+python tools/cli.py rag-ingest --file examples/demo/jobs.jsonl --reset
+python tools/cli.py search "深圳有哪些要求 RAG 经验的校招岗"
 
-| 必填项 | 说明 |
-|--------|------|
-| `smtp.server` | 邮箱 SMTP 服务器，如 `smtp.qq.com` |
-| `smtp.email` | 你的发件邮箱 |
-| `smtp.password` | 授权码（推荐用环境变量 `SMTP_PASSWORD`，不写进文件） |
-| `resume.path` | 简历 PDF 的路径 |
+# 2) 加一条线索，跑完整 Agent 流水线（到人工审批闸门停下）
+python tools/cli.py add --company "某公司" --job "LLM应用实习生" \
+    --email hr@example.com --source https://... --jd "岗位职责：..."
+python tools/cli.py graph run --lead 1
+python tools/cli.py graph resume --lead 1 --approve    # 人工决定
 
-可选项：
-- `user_overrides.cities` — 期望城市（覆盖简历中推断的）
-- `sources.imports.paths` — 双选会/校招 CSV 文件路径
-
-### 使用
-
-**第一步：解析简历**
-
-```bash
-python tools/cli.py parse-resume --pdf ./你的简历.pdf
-```
-
-会生成 `profile.yaml`——打开它，补全城市、方向、项目经历等。
-
-**第二步：生成搜索计划**
-
-```bash
-python tools/cli.py plan --run-profile standard
-```
-
-支持 `quick`（快速 10 条）/ `standard`（标准 25 条）/ `deep`（深度 40 条）三档。
-
-**第三步：采集岗位**
-
-```bash
-# 从公司招聘页采集
-python tools/cli.py collect --url "https://某公司.com/careers"
-
-# 手动添加
-python tools/cli.py add --company "某科技" --job "数据分析实习" \
-  --email "hr@example.com" --jd "需要Python" --source "https://..."
-```
-
-**第四步：生成求职信**
-
-```bash
-python tools/cli.py draft
-```
-
-**第五步：质量检查**
-
-```bash
-python tools/cli.py qa
-python tools/cli.py list --status ready
-```
-
-**第六步：审查后发送**
-
-```bash
-# 发单条
+# 3) 审查后发送（仍需显式确认，受每日限频约束）
 python tools/cli.py send --id 1 --confirm
 
-# 或全部发送
-python tools/cli.py send-all --confirm
+# 4) 服务化演示
+python -m uvicorn service.app:app --port 8000          # 终端 1
+streamlit run service/ui.py                            # 终端 2
 ```
 
-> 没有 `--confirm` 不会发送任何邮件。
+## 评测（数字全部脚本实跑）
 
-## CLI 命令速查
+**流水线评测**（10 条真实公开 JD，`python eval/scripts/run_pipeline.py --limit 10`）：
 
-| 命令 | 作用 |
-|------|------|
-| `parse-resume --pdf X` | PDF 简历 → profile.yaml |
-| `plan --run-profile X` | 生成搜索计划 |
-| `collect --url X` | 从 URL 采集岗位和邮箱 |
-| `add --company X --job X --email X` | 手动添加线索 |
-| `draft` | 为 pending 线索生成求职信 |
-| `set-body --id N --body "..."` | 手动替换某条求职信正文 |
-| `qa` | 过滤低质量线索 |
-| `list --status ready` | 查看待发送线索 |
-| `status` | 总览统计 |
-| `send --id N --confirm` | 发送单条 |
-| `send-all --confirm` | 发送所有 ready |
-| `export` | 导出 Markdown 报告 |
-| `health` | 检查数据源可用性 |
+| 指标 | 数值 |
+|---|---|
+| 经历质检回退重写 | 1/10（10%） |
+| 匹配分低被正确跳过 | 9/10（90%，学生画像 vs 社招岗） |
+| LLM 调用总次数 / token 总量 | 36 次 / 47,058（prompt 24,226 + completion 22,832） |
+| 平均每条端到端耗时 | ~61 s |
 
-## 数据源
+**检索三组对比、匹配准确率、抽取字段准确率**依赖人工标注（绝不编造）：
+标注工具与指南见 **[eval/README.md](eval/README.md)**（预计 30~60 分钟），
+完成后运行 `eval/scripts/run_retrieval.py` 等脚本即可生成结果表到 `eval/results/`。
+`--demo` 模式用内置示例标注（明确标记为演示数据，不代表系统效果）可先验证脚本流程。
 
-工具从公开渠道采集，**不会登录任何网站**，不绕过验证码。
+## 与旧版（Claude Code 宿主模式）的关系
 
-| 层级 | 来源 | 说明 |
-|------|------|------|
-| L0 | Web 搜索 | Claude 或搜索引擎按关键词搜 |
-| L1 | 学校就业网 / 公司 careers 页 | 你在 config 中配置的 URL |
-| L2 | SearXNG（可选） | 自建元搜索实例 |
-| L3 | 求职社区 | 牛客、应届生求职网、V2EX 等 |
-| L4 | 发现式搜索 | 线索不足时扩大搜索范围 |
+`SKILL.md + prompts/` 宿主模式**继续可用**：Claude 读 SKILL.md 调度 CLI 完成
+plan → collect → draft → qa 的多源采集与准备。LangGraph 流水线是平行的第二条路径，
+两者共享 store / adapters / RAG 等底层模块。
 
-默认屏蔽需要登录的站点：BOSS 直聘、猎聘、LinkedIn、脉脉等。
+## 安全与合规
 
-## 项目结构
-
-```
-config.example.yaml   ← 配置模板（复制为 config.yaml 使用）
-profile.yaml          ← 你的简历画像（gitignore，不会提交）
-sources.json          ← 数据源注册表
-profiles.json         ← quick/standard/deep 三档参数
-
-SKILL.md              ← Claude Code Skill 调度入口
-prompts/              ← 四阶段 Prompt（01_plan ~ 04_qa）
-
-tools/
-├── cli.py            ← CLI 入口（12 个子命令）
-├── parse_resume.py   ← PDF 解析
-├── plan.py           ← 搜索规划
-├── collect.py        ← 岗位采集
-├── draft.py          ← 求职信生成
-├── qa.py             ← 质量检查
-├── store.py          ← 线索存储（JSON）
-├── mailer.py         ← SMTP 发送
-├── match.py          ← JD-简历匹配评分
-├── extract.py        ← 邮箱提取
-├── registry.py       ← 数据源管理
-├── config_loader.py  ← 配置加载
-├── profile_io.py     ← Profile 读写
-├── common.py         ← 通用工具函数
-└── adapters/
-    ├── fetch.py      ← HTTP 抓取
-    └── imports.py    ← CSV/JSON 导入
-
-examples/demo/        ← 脱敏示例数据
-data/                 ← 运行时数据（gitignore）
-runs/                 ← 运行计划（gitignore）
-```
-
-## 安全说明
-
-- `config.yaml`、`profile.yaml`、`.env` 已在 `.gitignore` 中，**不会被提交**
-- SMTP 密码推荐通过环境变量 `SMTP_PASSWORD` 传入
-- `pipeline.auto_send` 强制为 `false`，代码中有硬检查
-
-## 合规
-
-- 仅使用公开页面与公开邮箱，不爬取登录墙后的内容
-- 发送频率可控（默认间隔 5 秒），避免骚扰
-- 投递后果由使用者自负
-- 本工具不绕过任何网站的登录或验证码机制
+- 发送三重闸门：QA 规则检查 → 人工审批 interrupt → `send --confirm`；每日限频强制执行
+- 模型没有任何节点/工具能触达发送或审批
+- 采集只走公开页面，屏蔽登录墙站点（BOSS/猎聘等，见 sources.json）
+- 求职信证据只能来自简历画像；质检明确检查「编造证据」
+- 密钥只进 `.env`（已 gitignore），token/耗时全部记账到 `logs/llm_calls.jsonl`
 
 ## License
 

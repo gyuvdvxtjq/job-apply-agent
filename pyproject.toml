@@ -1,6 +1,6 @@
 [project]
 name = "job-apply-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "简历画像驱动的校招岗位匹配与求职信生成 Agent（改造中：JobMatch-Agent）"
 readme = "README.md"
 requires-python = ">=3.10"
