@@ -1,0 +1,8 @@
+{
+  "id": "v2ex-1248790",
+  "title": "标题： [尋找 AI 時代的 OS 級合伙人] CloudCat（雲貓）—— 基於端雲協同与數據飛輪的 Personal AI OS",
+  "company": "尋找 AI 時代的 OS 級合伙人",
+  "city": "",
+  "jd_text": "标题： [尋找 AI 時代的 OS 級合伙人] CloudCat（雲貓）—— 基於端雲協同与數據飛輪的 Personal AI OS\n各位大佬/極客朋友好： 我是雲貓（ CloudCat ）創始人鄧智健。我們正在籌備一個真正能打通移動端 App 生態孤島的 AI 項目 —— 雲貓 CloudCat 。 我們拒絕做「只會陪聊」的 AI 助手，也拒絕做「隨時被系統升級封殺」的單點 Hook 工具。我們正在構建一個 Meta 式「控制與執行分離」的高可用 Personal AI OS： 🌟 我們的技術路線與架構： 端雲協同 &amp; 數據飛輪：雲端 Planner 負責推理與長工作流拆解，手端日誌回傳伺服器進行 RLHF 強化學習，實現「今天踩坑、明天全網 Agent 自動修復」的網絡效應。 端側雙軌執行器： 普及版（主力正兵）：Shizuku (ADB) + 無障礙 + 端側輕量 VLM 視覺 UI 識別，完全免 Root ，安全合規，覆蓋全量 Android 用戶。 內核版（極客奇兵）：保留 KernelSU / APatch / Binder 提權接口，作為高階極客模組。 獨創 Agent 意圖共識投票機制：透過 Multi-Agent 與 Human-in-the-Loop 投票卡片，徹底解決生成式 AI 跨 App 操作的幻覺與誤扣款風險。 🤝 我們在找這樣的靈魂合夥人 / 核心技術 Partner： Android 端側架構師：精通 Android 系統機制、Shizuku/ADB 協議、Accessibility 及 UIAutomator 。 雲端 AI / Agent 系統工程師：熟悉 LLM 任務拆解、LangChain/AutoGPT/Meta Agent 框架、RLHF 數據飛輪構建。 （兼顧）內核/Binder 大牛：熟悉 Non-GKI 內核編譯、Binder IPC 與系統保活。 💰 合作方式与真實待遇（不畫大餅）： 階段一（ 0-1 MVP 研發期）：提供 5,000 元/月 研發津貼（保障基礎生活）+ 10% - 20% 創始團隊股權（帶 4 年 Vesting 分期兌現）。 階段二（ Demo 跑通與正式融資後）：產品 MVP 跑通並對接融資/資助到帳後，正規提供市場化高薪（ 20k-30k+）。 如果你不想只做大廠的螺絲釘，想一起做一款真正影響數百萬人的個人 AI 操作系統，歡迎聯繫我！ V：jefferson1689 Email： [email&#160;protected]",
+  "source_url": "https://www.v2ex.com/t/1248790"
+}

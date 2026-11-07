@@ -1,0 +1,11 @@
+{"_说明": "每行一个自然语言检索问题。relevant_job_ids 填你判断与问题相关的岗位 id 列表（看 dataset/jobs.jsonl）。建议 8~15 个问题，覆盖城市/技能/方向/学历等维度。"}
+{"query_id": "q1", "query": "", "relevant_job_ids": []}
+{"query_id": "q2", "query": "", "relevant_job_ids": []}
+{"query_id": "q3", "query": "", "relevant_job_ids": []}
+{"query_id": "q4", "query": "", "relevant_job_ids": []}
+{"query_id": "q5", "query": "", "relevant_job_ids": []}
+{"query_id": "q6", "query": "", "relevant_job_ids": []}
+{"query_id": "q7", "query": "", "relevant_job_ids": []}
+{"query_id": "q8", "query": "", "relevant_job_ids": []}
+{"query_id": "q9", "query": "", "relevant_job_ids": []}
+{"query_id": "q10", "query": "", "relevant_job_ids": []}

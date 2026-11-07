@@ -1,0 +1,44 @@
+{"_说明": "对指定简历画像（默认 examples/demo/profile.yaml）判断每个岗位是否值得投递：label=1 匹配、0 不匹配。建议全量标注。可在 profile_path 换成你自己的真实画像后重标一组。"}
+{"job_id": "v2ex-1243876", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "机器人热招芯片架构 / AI", "company": "北京/上海/深圳/西安/南京"}
+{"job_id": "v2ex-1250045", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "紧急：高级 AI 全栈工程师", "company": ""}
+{"job_id": "v2ex-1250192", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "SOC 安全运营中心工程师", "company": ""}
+{"job_id": "v2ex-1250716", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "高级服务器开发工程师", "company": ""}
+{"job_id": "v2ex-1250726", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "LLM 应用研发工程师", "company": ""}
+{"job_id": "v2ex-1250841", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "程\r\nGolang 后端工程师", "company": ""}
+{"job_id": "v2ex-1250883", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": "帮朋友发布一条"}
+{"job_id": "v2ex-1250894", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": ""}
+{"job_id": "v2ex-1251159", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "字节 Data｜ 2027 届全职与实习岗位（个", "company": "个人"}
+{"job_id": "v2ex-1252035", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "找英语好的 Java 开发", "company": "广州/西安"}
+{"job_id": "v2ex-1252151", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "万/年 Senior AI", "company": ""}
+{"job_id": "v2ex-1252175", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "K] 招 IT 与自动化工程师", "company": "上海杨浦"}
+{"job_id": "v2ex-1252375", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "类 Fomo 社交应用项目，已获 BN 融资", "company": "融资"}
+{"job_id": "v2ex-1252484", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "SHEIN 商品中心社招", "company": "商品中心社招"}
+{"job_id": "v2ex-1252499", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "[行业头部互联网]", "company": "杭州"}
+{"job_id": "v2ex-1252526", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "杭州 AI", "company": "岗位"}
+{"job_id": "v2ex-1252554", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "AI 全栈工程师", "company": ""}
+{"job_id": "v2ex-1252864", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": ""}
+{"job_id": "v2ex-1252876", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "ai 应用创业公司", "company": "应用创业公司"}
+{"job_id": "v2ex-1252914", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "招募 4 位网络 AI 工程师", "company": "上海"}
+{"job_id": "v2ex-1253074", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "信息化工程师", "company": "南京"}
+{"job_id": "v2ex-1253103", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "能督查官，运维助理，后端工程师", "company": ""}
+{"job_id": "v2ex-1253233", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "上海大模型评测工程师", "company": ""}
+{"job_id": "v2ex-1253279", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "imi AI ｜体验运营实习生", "company": ""}
+{"job_id": "v2ex-1253785", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "急招！坐班上海算法", "company": ""}
+{"job_id": "v2ex-1253828", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "I Agent 应用开发工程师", "company": "应用开发工程师"}
+{"job_id": "v2ex-1253849", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "tion ：量化交易系统工程师", "company": ""}
+{"job_id": "v2ex-1253866", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "Token Foundry Infra（Qwen", "company": "阿里"}
+{"job_id": "v2ex-1254085", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "上海 | 顶尖 AI", "company": "AI Agent 全栈工程师"}
+{"job_id": "v2ex-1254137", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "招聘：\r\n量化交易系统工程师", "company": ""}
+{"job_id": "v2ex-1254210", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": ""}
+{"job_id": "v2ex-1254277", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": ""}
+{"job_id": "v2ex-1254471", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "一位产品设计师与一位全栈工程师", "company": ""}
+{"job_id": "v2ex-1254493", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": ""}
+{"job_id": "v2ex-1254512", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": "38k"}
+{"job_id": "v2ex-1254553", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "软件测试工程师", "company": "成都"}
+{"job_id": "v2ex-1254613", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": "远程"}
+{"job_id": "v2ex-1254673", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "济南", "company": "济南"}
+{"job_id": "v2ex-1254730", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "北京联想", "company": "北京联想"}
+{"job_id": "v2ex-1254733", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "I，找几位能挑大梁的资深工程师", "company": "北京"}
+{"job_id": "v2ex-1254818", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "", "company": ""}
+{"job_id": "v2ex-1254890", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "\r\nC++低延迟交易系统工程师", "company": ""}
+{"job_id": "v2ex-1255084", "profile": "examples/demo/profile.yaml", "label": null, "job_title": "Agent Infra 工程师", "company": ""}
