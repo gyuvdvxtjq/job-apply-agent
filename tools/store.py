@@ -167,7 +167,7 @@ class JobLeads:
         return True
 
     def count_by_status(self) -> dict[str, int]:
-        keys = ["pending", "ready", "sent", "failed", "skipped"]
+        keys = ["pending", "reviewing", "ready", "sent", "failed", "skipped"]
         counts = {k: 0 for k in keys}
         for lead in self._leads:
             s = lead.get("status") or "pending"
