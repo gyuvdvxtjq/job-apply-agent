@@ -51,6 +51,13 @@ rag:
     enabled: true           # 关闭后评测可对比「混合 vs 混合+重排」
     top_n: 5
 
+# LangGraph 流水线
+graph:
+  max_retries: 2             # 质检不过的最大重写次数
+  min_match_score: 0.5       # LLM 匹配分低于此值直接跳过
+  retrieve_top_k: 5
+  db_path: ./data/graph_state.db  # 图状态 SQLite checkpointer
+
 sources:
   # L0：宿主搜索（Claude WebSearch / tinyfish 等）由 Skill 调用，这里只做开关
   web_search:

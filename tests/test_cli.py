@@ -235,3 +235,36 @@ def test_extract_jd_command_api_failure(tmp_path, monkeypatch):
     lead = JobLeads(data_dir).get(1)
     assert "jd_info" not in lead
     assert "网络错误" in lead["jd_info_error"]
+
+
+def test_graph_cli_run_status_resume(tmp_path, monkeypatch):
+    import test_graph as tg
+
+    cfg = make_config(tmp_path)
+    make_profile(tmp_path)
+    data_dir = tmp_path / "data"
+    JobLeads(data_dir).add(
+        company="甲公司", job_title="大模型应用实习生", contact_email="hr@a.com",
+        jd_summary="深圳 甲公司 招大模型应用实习生：负责 RAG 检索增强；要求熟悉 Python，本科。",
+        source_url="https://example-a.com/jobs/1",
+    )
+    monkeypatch.setattr("llm.LLMClient", lambda cfg=None, **kw: tg.ScriptedLLM({
+        "jd_extract": [tg.GOOD_EXTRACT],
+        "match_score": [tg.MATCH_HIGH],
+        "draft_cover_letter": [tg.DRAFT],
+        "qa_cover_letter": [tg.QA_PASS],
+    }))
+    monkeypatch.setattr(cli, "_build_default_retriever", lambda cfg: tg.FakeRetriever())
+
+    rc = cli.main(["--config", str(cfg), "graph", "run", "--lead", "1", "--data-dir", str(data_dir)])
+    assert rc == 0
+    assert JobLeads(data_dir).get(1)["status"] == "reviewing"
+
+    rc = cli.main(["--config", str(cfg), "graph", "status", "--lead", "1", "--data-dir", str(data_dir)])
+    assert rc == 0
+
+    rc = cli.main([
+        "--config", str(cfg), "graph", "resume", "--lead", "1", "--approve", "--data-dir", str(data_dir),
+    ])
+    assert rc == 0
+    assert JobLeads(data_dir).get(1)["status"] == "ready"

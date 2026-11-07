@@ -315,6 +315,124 @@ def cmd_search(args):
     return 0
 
 
+def _build_default_retriever(cfg: dict):
+    from embeddings import EmbeddingClient
+    from rag import HybridRetriever, JDVectorStore
+    from rerank import RerankClient
+
+    rag_cfg = dict(cfg.get("rag") or {})
+    db_dir = resolve_path(cfg, rag_cfg.get("db_dir") or "./data/chroma")
+    store = JDVectorStore(db_dir, collection=rag_cfg.get("collection") or "jd_chunks")
+    return HybridRetriever(store, EmbeddingClient(), RerankClient(), cfg=rag_cfg)
+
+
+def cmd_graph_run(args):
+    from graph import build_pipeline, default_graph_cfg, make_checkpointer, run_lead
+    from llm import LLMClient
+
+    cfg = load_config(args.config)
+    profile_path = resolve_path(cfg, cfg.get("profile_path") or "profile.yaml")
+    if not profile_path.exists():
+        print(f"❌ 需要 profile: {profile_path}")
+        return 1
+    profile = apply_overrides(load_profile(profile_path), cfg.get("user_overrides"))
+    data_dir = resolve_path(cfg, args.data_dir)
+    leads = JobLeads(data_dir)
+    gcfg = default_graph_cfg(cfg)
+    graph = build_pipeline(
+        cfg,
+        LLMClient(cfg=dict(cfg.get("llm") or {})),
+        _build_default_retriever(cfg),
+        leads,
+        checkpointer=make_checkpointer(resolve_path(cfg, gcfg["db_path"])),
+    )
+    targets = [args.lead] if args.lead else [x["id"] for x in leads.list("pending")]
+    if not targets:
+        print("没有 pending 线索")
+        return 0
+    rc = 0
+    for lead_id in targets:
+        values = run_lead(graph, leads, lead_id, profile, fresh=args.fresh)
+        outcome = values.get("outcome") or "unknown"
+        label = {
+            "awaiting_approval": "⏸ 已到人工审批闸门（graph resume 继续）",
+            "low_match": "⏭ 匹配分低，已跳过",
+            "llm_failed": "❌ LLM 调用失败",
+            "approved": "✅ 已批准",
+            "rejected": "⏭ 已否决",
+        }.get(outcome, outcome)
+        print(f"  #{lead_id} {label} (retry={values.get('retry_count')}, score={None if not values.get('match_verdict') else values['match_verdict'].get('score')})")
+        if outcome in ("llm_failed", "error"):
+            rc = 1
+    return rc
+
+
+def cmd_graph_resume(args):
+    from graph import build_pipeline, default_graph_cfg, make_checkpointer, resume_lead
+    from llm import LLMClient
+
+    cfg = load_config(args.config)
+    profile_path = resolve_path(cfg, cfg.get("profile_path") or "profile.yaml")
+    if not profile_path.exists():
+        print(f"❌ 需要 profile: {profile_path}")
+        return 1
+    profile = apply_overrides(load_profile(profile_path), cfg.get("user_overrides"))
+    data_dir = resolve_path(cfg, args.data_dir)
+    leads = JobLeads(data_dir)
+    gcfg = default_graph_cfg(cfg)
+    graph = build_pipeline(
+        cfg,
+        LLMClient(cfg=dict(cfg.get("llm") or {})),
+        _build_default_retriever(cfg),
+        leads,
+        checkpointer=make_checkpointer(resolve_path(cfg, gcfg["db_path"])),
+    )
+    decision = (
+        {"action": "approve"} if args.approve
+        else {"action": "reject", "reason": args.reason or "人工否决"}
+    )
+    values = resume_lead(graph, leads, args.lead, decision)
+    if values.get("outcome") == "error":
+        print(f"❌ {values.get('error')}")
+        return 1
+    label = {"approved": "✅ 已批准 → ready（发送仍需 send --confirm）", "rejected": "⏭ 已否决 → skipped"}.get(
+        values.get("outcome"), values.get("outcome")
+    )
+    print(f"  #{args.lead} {label}")
+    return 0
+
+
+def cmd_graph_status(args):
+    from graph import build_pipeline, default_graph_cfg, graph_status, make_checkpointer
+    from llm import LLMClient
+
+    cfg = load_config(args.config)
+    data_dir = resolve_path(cfg, args.data_dir)
+    leads = JobLeads(data_dir)
+    gcfg = default_graph_cfg(cfg)
+    graph = build_pipeline(
+        cfg,
+        LLMClient(cfg=dict(cfg.get("llm") or {})),
+        _build_default_retriever(cfg),
+        leads,
+        checkpointer=make_checkpointer(resolve_path(cfg, gcfg["db_path"])),
+    )
+    ids = [args.lead] if args.lead else [x["id"] for x in leads.list("reviewing")] + \
+        [x["id"] for x in leads.list("pending")]
+    for lead_id in ids:
+        st = graph_status(graph, lead_id)
+        if not st.get("exists"):
+            continue
+        print(
+            f"  #{lead_id} next={st['next'] or '(已结束)'} outcome={st.get('outcome')} "
+            f"retry={st.get('retry_count')} score={st.get('match_score')} "
+            f"qa_pass={st.get('qa_passed')} issues={len(st.get('qa_issues') or [])}"
+        )
+        for issue in (st.get("qa_issues") or [])[:3]:
+            print(f"      - {issue}")
+    return 0
+
+
 def cmd_send(args):
     if not args.confirm:
         print("❌ 发送需显式 --confirm（默认只准备 ready，不自动发）")
@@ -528,6 +646,26 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--no-rerank", action="store_true")
     sp.add_argument("--json", action="store_true", help="输出完整 JSON")
     sp.set_defaults(func=cmd_search)
+
+    sp = sub.add_parser("graph", help="LangGraph 流水线（run/resume/status）")
+    gsub = sp.add_subparsers(dest="graph_command", required=True)
+    gr = gsub.add_parser("run", help="跑流水线到人工审批闸门")
+    gr.add_argument("--lead", type=int, default=None, help="指定线索（默认所有 pending）")
+    gr.add_argument("--data-dir", default="data")
+    gr.add_argument("--fresh", action="store_true", help="清掉该线索的历史图状态重跑")
+    gr.set_defaults(func=cmd_graph_run)
+    grs = gsub.add_parser("resume", help="提交人工审批决定")
+    grs.add_argument("--lead", type=int, required=True)
+    ggroup = grs.add_mutually_exclusive_group(required=True)
+    ggroup.add_argument("--approve", action="store_true")
+    ggroup.add_argument("--reject", action="store_true")
+    grs.add_argument("--reason", default="")
+    grs.add_argument("--data-dir", default="data")
+    grs.set_defaults(func=cmd_graph_resume)
+    gst = gsub.add_parser("status", help="查看图状态")
+    gst.add_argument("--lead", type=int, default=None)
+    gst.add_argument("--data-dir", default="data")
+    gst.set_defaults(func=cmd_graph_status)
 
     sp = sub.add_parser("send", help="Send one lead (requires --confirm)")
     sp.add_argument("--data-dir", default="data")
