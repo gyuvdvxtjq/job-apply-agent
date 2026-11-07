@@ -190,5 +190,28 @@ Pydantic 校验 → 失败把错误信息回喂重试。策略全项目一致，
 数据集来源为 V2EX 酷工作等公开、无需登录的页面（服务端渲染可直接解析），
 遵守项目「不爬登录墙」规则；每条数据带 source_url 溯源；请求间隔 1.5s 低频抓取。
 
+## 6. 阶段 5：服务化
+
+### 6.1 Web 层不拥有任何审批/发送能力
+
+FastAPI 只暴露三个只读/生成端点（search / match / generate），
+**没有 send、没有 approve、没有改状态的写端点**——审批留在 CLI 人工闸门，
+发送留在 `send --confirm`。Streamlit 看板只读展示线索状态。
+原则：对外服务面越大，误触发面越大；有副作用的动作只留一条人工路径。
+
+### 6.2 SSE 流式生成
+
+/generate 用 `chat_stream`（阶段 1 已实现）逐 token 推送 `data: {"delta": ...}`，
+结束发 `{"done": true}`，异常发 `{"error": ...}`——流中断也要让前端拿到明确信号。
+提示词与 CLI 生成共用 DRAFT_SYSTEM_PROMPT，证据约束（只用 highlights）不因走
+服务化而放松。token/耗时记账复用同一 llm_calls.jsonl（purpose=svc_generate）。
+
+### 6.3 工厂模式装配
+
+`create_app(retriever_builder=..., llm_builder=...)` 依赖注入便于测试
+（假检索器/假 LLM，8 个用例全离线，含 SSE 解析）；生产入口 `app = create_app()`
+惰性构建单例（首次请求才连 Chroma/装 API key），导入轻、启动快。
+
+
 
 
