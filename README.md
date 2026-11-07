@@ -107,6 +107,24 @@ job_title 受多岗帖与标题截断影响）。
 **流水线评测**（10 条真实 JD）：
 质检回退重写 10%、低分正确跳过 90%、36 次 LLM 调用 / 47,058 token、平均 ~61 s/条。
 
+## 公网演示（instabox 沙箱）
+
+服务可部署到 instabox 云沙箱，获得 **token 门禁的公网链接**（仅沙箱开机期间有效）：
+
+```bash
+ssh <沙箱> "git clone https://github.com/gyuvdvxtjq/job-apply-agent.git /data/workspace/jobagent"
+# 沙箱内：
+python3 -m venv /data/venv-jobagent && /data/venv-jobagent/bin/pip install -r requirements.txt
+cp config.example.yaml config.yaml   # 写入 .env（LLM_API_KEY / SILICONFLOW_API_KEY）
+/data/venv-jobagent/bin/python tools/cli.py rag-ingest --file examples/demo/jobs.jsonl --reset
+nohup /data/venv-jobagent/bin/python -m uvicorn service.app:app --host 127.0.0.1 --port 8000 &
+nohup /data/venv-jobagent/bin/python -m streamlit run service/ui.py --server.port 8501 &
+instabox-port publish 8501 --private   # 打印一次性 token 链接
+instabox-port publish 8000 --private
+```
+
+演示链接不写入本仓库（token 门禁保护 API 配额），需要时联系作者获取。
+
 ## 与旧版（Claude Code 宿主模式）的关系
 
 `SKILL.md + prompts/` 宿主模式**继续可用**：Claude 读 SKILL.md 调度 CLI 完成
