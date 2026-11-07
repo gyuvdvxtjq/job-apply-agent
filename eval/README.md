@@ -1,15 +1,21 @@
 # 评测（eval/）
 
-所有评测数字由脚本实跑得出，**不手工编造**。标注全部由人工完成。
+所有评测数字由脚本实跑得出，**不手工编造**。
+
+> ⚠️ **标注者声明**：本数据集的金标准标注由**项目作者本人**完成（非独立第三方）。
+> 作者对系统实现有充分了解，标注虽按统一规则执行（见下），但与系统输出存在
+> 潜在的相关性偏置，数字应视为**作者视角的自我评估**，而非独立人工评测的结论。
+> 重新标注即可获得独立结果：`make_label_skeletons.py` 可随时生成空白骨架，
+> 按「标注者须知」用第三方标注者重标后重跑脚本。
 
 ```
 eval/
 ├── dataset/
-│   ├── jobs.jsonl               # 岗位数据集（43 条真实公开 JD，来源 V2EX 酷工作，见 source_url）
+│   ├── jobs.jsonl               # 岗位数据集（124 条真实公开 JD，来源 V2EX 酷工作，见 source_url）
 │   ├── raw_v2ex/                # 原始采集（溯源用）
-│   ├── retrieval_queries.jsonl  # 【待标注】检索问题 ↔ 相关岗位 ID
-│   ├── match_labels.jsonl       # 【待标注】画像 × 岗位 → 匹配/不匹配
-│   └── extract_labels.jsonl     # 【待标注】抽取金标准字段
+│   ├── retrieval_queries.jsonl  # 检索问题 ↔ 相关岗位 ID（12 条，人工标注）
+│   ├── match_labels.jsonl       # 画像 × 岗位 → 匹配/不匹配（124 条，正样本 8）
+│   └── extract_labels.jsonl     # 抽取金标准字段（124 条）
 ├── scripts/
 │   ├── make_label_skeletons.py  # 生成标注骨架（预填客观上下文，不预填判断）
 │   ├── run_retrieval.py         # 检索三组对比：纯向量 / 混合 / 混合+重排 → Recall@5 / MRR
