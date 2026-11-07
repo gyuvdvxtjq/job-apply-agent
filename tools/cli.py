@@ -16,6 +16,7 @@ job-apply-agent CLI
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
@@ -247,6 +248,73 @@ def cmd_extract_jd(args):
     return 0 if fail == 0 else 1
 
 
+def cmd_rag_ingest(args):
+    from embeddings import EmbeddingClient
+    from rag import JDVectorStore, ingest_jobs_file
+
+    cfg = load_config(args.config)
+    rag_cfg = dict(cfg.get("rag") or {})
+    jobs_path = Path(args.file)
+    if not jobs_path.exists():
+        print(f"❌ 找不到 jobs 文件: {jobs_path}")
+        return 1
+    db_dir = resolve_path(cfg, args.db or rag_cfg.get("db_dir") or "./data/chroma")
+    store = JDVectorStore(db_dir, collection=rag_cfg.get("collection") or "jd_chunks")
+    embedder = EmbeddingClient()
+    stats = ingest_jobs_file(
+        jobs_path,
+        store,
+        embedder,
+        max_chars=int(rag_cfg.get("chunk_max_chars") or 500),
+        reset=args.reset,
+    )
+    print(
+        f"✅ 入库完成: {stats['jobs']} 条 JD → {stats['chunks']} 个 chunk"
+        f"（失败 {len(stats['failed'])}），库内共 {store.count()} 块"
+    )
+    return 0 if not stats["failed"] else 1
+
+
+def cmd_search(args):
+    from embeddings import EmbeddingClient
+    from rag import HybridRetriever, JDVectorStore
+    from rerank import RerankClient
+
+    cfg = load_config(args.config)
+    rag_cfg = dict(cfg.get("rag") or {})
+    db_dir = resolve_path(cfg, rag_cfg.get("db_dir") or "./data/chroma")
+    store = JDVectorStore(db_dir, collection=rag_cfg.get("collection") or "jd_chunks")
+    if store.count() == 0:
+        print("❌ 向量库为空，先运行 rag-ingest")
+        return 1
+    embedder = EmbeddingClient()
+    reranker = None
+    if not args.no_rerank:
+        reranker = RerankClient()
+    retriever = HybridRetriever(store, embedder, reranker, cfg=rag_cfg)
+    results = retriever.search(
+        args.query, top_k=args.top, mode=args.mode,
+        rerank=False if args.no_rerank else None,
+    )
+    if args.json:
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+        return 0
+    for r in results:
+        score = (
+            r.get("rerank_score")
+            or r.get("rrf_score")
+            or r.get("vector_score")
+            or r.get("bm25_score")
+        )
+        print(
+            f"  [{r.get('section')}] {r.get('company')} · {r.get('job_title')}"
+            f"（{r.get('city')}）score={score}"
+        )
+        print(f"    {r['text'][:100].replace(chr(10), ' ')}")
+    print(f"共 {len(results)} 条")
+    return 0
+
+
 def cmd_send(args):
     if not args.confirm:
         print("❌ 发送需显式 --confirm（默认只准备 ready，不自动发）")
@@ -446,6 +514,20 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--text", default=None, help="直接抽取一段 JD 文本（调试用）")
     sp.add_argument("--force", action="store_true", help="已抽取的线索重新抽取")
     sp.set_defaults(func=cmd_extract_jd)
+
+    sp = sub.add_parser("rag-ingest", help="JD 文件分块并向量化入库（Chroma）")
+    sp.add_argument("--file", required=True, help="jobs.jsonl 路径")
+    sp.add_argument("--db", default=None, help="Chroma 持久化目录（默认 config.rag.db_dir）")
+    sp.add_argument("--reset", action="store_true", help="入库前清空集合")
+    sp.set_defaults(func=cmd_rag_ingest)
+
+    sp = sub.add_parser("search", help="自然语言检索岗位（混合召回 + 可选重排）")
+    sp.add_argument("query")
+    sp.add_argument("--top", type=int, default=5)
+    sp.add_argument("--mode", choices=["hybrid", "vector", "bm25"], default="hybrid")
+    sp.add_argument("--no-rerank", action="store_true")
+    sp.add_argument("--json", action="store_true", help="输出完整 JSON")
+    sp.set_defaults(func=cmd_search)
 
     sp = sub.add_parser("send", help="Send one lead (requires --confirm)")
     sp.add_argument("--data-dir", default="data")

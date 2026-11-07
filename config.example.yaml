@@ -38,6 +38,19 @@ llm:
     prompt: 0.0
     completion: 0.0
 
+# RAG（岗位检索）
+rag:
+  db_dir: ./data/chroma     # Chroma 持久化目录
+  collection: jd_chunks
+  chunk_max_chars: 500      # 单块最大长度（按标题分块后超长再按句切）
+  vector_k: 20              # 向量召回条数
+  bm25_k: 20                # BM25 召回条数
+  rrf_k: 60                 # RRF 常数
+  top_k: 5
+  rerank:
+    enabled: true           # 关闭后评测可对比「混合 vs 混合+重排」
+    top_n: 5
+
 sources:
   # L0：宿主搜索（Claude WebSearch / tinyfish 等）由 Skill 调用，这里只做开关
   web_search:
