@@ -196,6 +196,57 @@ def daily_cap_status(cfg: dict, sent_log: SentLog) -> tuple[bool, int, int]:
     return (cap > 0 and used >= cap), used, cap
 
 
+def cmd_extract_jd(args):
+    from extract_jd import extract_jd_info
+    from llm import LLMClient
+
+    cfg = load_config(args.config)
+    llm_cfg = dict(cfg.get("llm") or {})
+    client = LLMClient(cfg=llm_cfg)
+    max_retries = int(llm_cfg.get("extract_max_retries") or 2)
+
+    if args.text:
+        info, stats = extract_jd_info(args.text, client, max_retries=max_retries)
+        if info:
+            print(info.model_dump_json(indent=2))
+            return 0
+        print(f"❌ 抽取失败: {stats['errors'][-1] if stats['errors'] else 'unknown'}")
+        return 1
+
+    leads = JobLeads(resolve_path(cfg, args.data_dir))
+    targets = [leads.get(args.id)] if args.id else leads.list()
+    done = fail = skipped = 0
+    for lead in targets:
+        if not lead:
+            continue
+        jd = (lead.get("jd_summary") or "").strip()
+        if not jd or (lead.get("jd_info") and not args.force):
+            skipped += 1
+            continue
+        info, stats = extract_jd_info(jd, client, max_retries=max_retries)
+        if info:
+            leads.update_field(lead["id"], "jd_info", info.model_dump())
+            if lead.get("jd_info_error"):
+                leads.update_field(lead["id"], "jd_info_error", "")
+            done += 1
+            mark = "✅"
+        else:
+            leads.update_field(
+                lead["id"], "jd_info_error",
+                stats["errors"][-1] if stats["errors"] else "unknown",
+            )
+            fail += 1
+            mark = "❌"
+        print(f"  {mark} #{lead['id']} attempts={stats['attempts']}")
+    total = done + fail
+    rate = (fail / total) if total else 0.0
+    print(
+        f"✅ 抽取完成: 成功 {done} / 失败 {fail}（失败率 {rate:.0%}），"
+        f"跳过 {skipped} 条（无 JD 文本或已抽取，--force 可重抽）"
+    )
+    return 0 if fail == 0 else 1
+
+
 def cmd_send(args):
     if not args.confirm:
         print("❌ 发送需显式 --confirm（默认只准备 ready，不自动发）")
@@ -385,6 +436,16 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--id", type=int, required=True)
     sp.add_argument("--body", required=True)
     sp.set_defaults(func=cmd_set_body)
+
+    sp = sub.add_parser(
+        "extract-jd",
+        help="LLM 结构化抽取 JD 字段（公司/岗位/城市/学历/技术栈/截止/投递方式）",
+    )
+    sp.add_argument("--data-dir", default="data")
+    sp.add_argument("--id", type=int, default=None)
+    sp.add_argument("--text", default=None, help="直接抽取一段 JD 文本（调试用）")
+    sp.add_argument("--force", action="store_true", help="已抽取的线索重新抽取")
+    sp.set_defaults(func=cmd_extract_jd)
 
     sp = sub.add_parser("send", help="Send one lead (requires --confirm)")
     sp.add_argument("--data-dir", default="data")

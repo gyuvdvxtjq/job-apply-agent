@@ -169,3 +169,69 @@ def test_collect_from_imports_demo_csv(tmp_path):
     # 重复导入按邮箱去重
     n2 = collect_from_imports([str(csv_path)], {}, leads, sent)
     assert n2 == 0
+
+
+def _fake_llm_client(content: str | Exception):
+    """构造可注入 cli 的假 LLMClient（函数内延迟导入从 llm 模块取符号）。"""
+    from llm import LLMResponse, Usage
+
+    class FakeClient:
+        def __init__(self, cfg=None, **kw):
+            pass
+
+        def chat(self, messages, **kw):
+            if isinstance(content, Exception):
+                raise content
+            return LLMResponse(
+                content=content, model="fake", usage=Usage(5, 5, 10), latency_ms=1
+            )
+
+    return FakeClient
+
+
+GOOD_EXTRACT = (
+    '{"company":"示例科技","job_title":"Python实习生","cities":["深圳"],'
+    '"education_requirement":"本科","tech_stack":["Python","RAG"],'
+    '"deadline":"2026-12-01","apply_method":"hr@a.com"}'
+)
+
+
+def test_extract_jd_command(tmp_path, monkeypatch):
+    cfg = make_config(tmp_path)
+    make_profile(tmp_path)
+    data_dir = tmp_path / "data"
+    JobLeads(data_dir).add(
+        company="", job_title="", contact_email="a@b.com",
+        jd_summary="深圳 示例科技 招 Python 实习生，本科，会 RAG，投递 hr@a.com，截止 2026-12-01",
+    )
+    monkeypatch.setattr("llm.LLMClient", _fake_llm_client(GOOD_EXTRACT))
+    rc = cli.main(["--config", str(cfg), "extract-jd", "--data-dir", str(data_dir)])
+    assert rc == 0
+    lead = JobLeads(data_dir).get(1)
+    assert lead["jd_info"]["cities"] == ["深圳"]
+    assert lead["jd_info"]["deadline"] == "2026-12-01"
+
+    # 已抽取 → 跳过；--force 重新抽取
+    assert cli.main(["--config", str(cfg), "extract-jd", "--data-dir", str(data_dir)]) == 0
+    assert cli.main([
+        "--config", str(cfg), "extract-jd", "--data-dir", str(data_dir), "--force",
+    ]) == 0
+
+
+def test_extract_jd_command_api_failure(tmp_path, monkeypatch):
+    from llm import LLMError
+
+    cfg = make_config(tmp_path)
+    make_profile(tmp_path)
+    data_dir = tmp_path / "data"
+    JobLeads(data_dir).add(
+        company="", job_title="", contact_email="a@b.com", jd_summary="某 JD 文本",
+    )
+    monkeypatch.setattr(
+        "llm.LLMClient", _fake_llm_client(LLMError("网络错误"))
+    )
+    rc = cli.main(["--config", str(cfg), "extract-jd", "--data-dir", str(data_dir)])
+    assert rc == 1
+    lead = JobLeads(data_dir).get(1)
+    assert "jd_info" not in lead
+    assert "网络错误" in lead["jd_info_error"]
