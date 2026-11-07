@@ -25,6 +25,19 @@ user_overrides:
   exclude_companies: []
   exclude_keywords: []
 
+# LLM（OpenAI 兼容协议；连接参数在 .env：LLM_BASE_URL / LLM_API_KEY / LLM_MODEL）
+llm:
+  temperature: 0.2
+  timeout_seconds: 60
+  max_retries: 2          # 网络层重试次数（429/5xx/超时，指数退避）
+  max_tokens: 1024
+  extract_max_retries: 2  # JD 抽取校验失败后的回喂重试次数
+  # 成本核算价格表（元/百万 token），以供应商官网为准，只改这里
+  # 评测脚本 = 日志里的 token 数 × 此表
+  price_per_mtok:
+    prompt: 0.0
+    completion: 0.0
+
 sources:
   # L0：宿主搜索（Claude WebSearch / tinyfish 等）由 Skill 调用，这里只做开关
   web_search:

@@ -24,6 +24,7 @@ config.yaml
 data/*
 !data/.gitkeep
 runs/
+logs/
 tmp/
 .tmpdir/
 *.log
