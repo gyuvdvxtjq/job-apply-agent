@@ -7,12 +7,15 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from dotenv import load_dotenv
 
 from common import env_or, repo_root
 
 
 def load_config(config_path: str | Path | None = None) -> dict[str, Any]:
     root = repo_root()
+    # 仓库根 .env 提供密钥（已 gitignore）；不覆盖已有环境变量
+    load_dotenv(root / ".env", override=False)
     if config_path is None:
         candidate = root / "config.yaml"
         if not candidate.exists():
