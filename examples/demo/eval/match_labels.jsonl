@@ -1,0 +1,8 @@
+{"job_id": "demo-001", "profile": "examples/demo/profile.yaml", "label": 1, "job_title": "大模型应用开发实习生", "company": "示例智能"}
+{"job_id": "demo-002", "profile": "examples/demo/profile.yaml", "label": 1, "job_title": "数据分析实习生", "company": "示例数据"}
+{"job_id": "demo-003", "profile": "examples/demo/profile.yaml", "label": 0, "job_title": "后端开发实习生（Go）", "company": "示例云"}
+{"job_id": "demo-004", "profile": "examples/demo/profile.yaml", "label": 1, "job_title": "机器学习算法实习生", "company": "示例机器人"}
+{"job_id": "demo-005", "profile": "examples/demo/profile.yaml", "label": 1, "job_title": "数据工程实习生", "company": "示例出行"}
+{"job_id": "demo-006", "profile": "examples/demo/profile.yaml", "label": 1, "job_title": "AIGC 产品实习生", "company": "示例内容"}
+{"job_id": "demo-007", "profile": "examples/demo/profile.yaml", "label": 0, "job_title": "量化研究实习生", "company": "示例金融"}
+{"job_id": "demo-008", "profile": "examples/demo/profile.yaml", "label": 0, "job_title": "嵌入式软件实习生", "company": "示例硬件"}

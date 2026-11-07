@@ -1,0 +1,8 @@
+{
+  "id": "v2ex-1252151",
+  "title": "[全英文 HC] RMB 42–85 万/年 Senior AI Inference Infrastructure | LLM Data | Speech AI 东京 Voice AI / AI Agent 公司",
+  "company": "全英文 HC",
+  "city": "",
+  "jd_text": "[全英文 HC] RMB 42–85 万/年 Senior AI Inference Infrastructure | LLM Data | Speech AI 东京 Voice AI / AI Agent 公司\n东京的 Voice AI / AI Agent 公司，主要面向企业客户做语音 AI Agent ，从模型、推理基础设施到企业落地都有自研。 年收均为 1000–2000 万日元 ，可提供日本工作签证及 Relocation Support 。 1. Senior AI Inference Infrastructure Engineer Japanese: Not required / Working language: English Requirements: Strong Python / PyTorch Production GPU inference experience Distributed / parallel inference, batching, async processing Strong in at least one: LLM inference: vLLM / SGLang, Prefill/Decode, KV Cache Speech inference: ASR / TTS inference pipeline Plus: CUDA / Triton / NCCL / TensorRT-LLM / Kubernetes / Slurm / Ray 2. Senior LLM Data Engineer English + Japanese N2 Requirements: Production LLM training / evaluation data experience Python + large-scale data processing pandas / Polars / Spark / SQL / ETL SFT / RL data Synthetic Data LLM-as-a-Judge Dataset quality / benchmark / evaluation design 3. Senior Speech AI Engineer / TTS English + Japanese N2 Requirements: Hands-on TTS / Speech Synthesis model R&amp;D Python / PyTorch Model training and productionization Speech data preprocessing / alignment / labeling Experience with modern TTS architectures Plus: Audio Codec / Flow Matching / Diffusion / LLM-based TTS Common Salary: JPY 10M–20M Tokyo / Hanzomon Overseas candidates welcome Visa &amp; relocation support Remote / Full Remote can be discussed depending on the case 有兴趣可以滴滴 v:sj-offer 或者 [email&#160;protected]",
+  "source_url": "https://www.v2ex.com/t/1252151"
+}

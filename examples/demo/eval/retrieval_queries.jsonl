@@ -1,0 +1,8 @@
+{"query_id": "q1", "query": "深圳有哪些要求 RAG 经验的校招岗", "relevant_job_ids": ["demo-001"]}
+{"query_id": "q2", "query": "北京的数据分析实习", "relevant_job_ids": ["demo-002"]}
+{"query_id": "q3", "query": "Go 或者云原生后端的实习岗位", "relevant_job_ids": ["demo-003"]}
+{"query_id": "q4", "query": "上海有哪些机器学习或量化方向实习", "relevant_job_ids": ["demo-004", "demo-007"]}
+{"query_id": "q5", "query": "招大模型或 AIGC 方向实习生的公司", "relevant_job_ids": ["demo-001", "demo-006"]}
+{"query_id": "q6", "query": "要求会 SQL 的实习", "relevant_job_ids": ["demo-002", "demo-005", "demo-007"]}
+{"query_id": "q7", "query": "苏州或杭州的软件开发实习", "relevant_job_ids": ["demo-003", "demo-008"]}
+{"query_id": "q8", "query": "对学历要求低的 AI 实习", "relevant_job_ids": ["demo-006"]}

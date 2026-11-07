@@ -1,0 +1,8 @@
+{
+  "id": "v2ex-1250894",
+  "title": "招聘 llvm / mlir / ai 编译器 相关岗位(不限年龄)",
+  "company": "",
+  "city": "",
+  "jd_text": "招聘 llvm / mlir / ai 编译器 相关岗位(不限年龄)\n我这边是一个成立几年的小芯片公司， 做 mesh 架构的 ai 推理芯片为主， 当前芯片的架构类似 ascend 老型号的 910A 。 主要招人做类似 llvm 和 类似 ascend c 的编程框架 薪水中等，年薪几百万的大牛请不起。 需求： 并不需要你精通 llvm 的方方面面， 我们只是小改 llvm 。 增加一些 builtin 函数和自定义 pass 。 主要工作内容有几个方面： 1. 给自己设计的芯片开发 llvm builtin 函数 和自定义 pass 。 2. 开发类似 ascend c 的 编程框架 3. 在编成框架基础之上，开发 rmsnorm / gemm 等基本算子 的 example 3. 性能优化 4. 基于 python dsl 的 上层接口 5. MLIR 相关 至少知道主流芯片的基本工作原理。 如果对 L1, simd, tilelang 里的 tile 的概念都不清楚， 你怎么给 ai 写正确的提示词呢？ 不限年龄，只看代码产出。 可以用 ai 开发代码，但是要正确使用 ai 。 面试内容主要是一个面试题， 会给你一个自定义的 riscv 扩展指令， 根据需要设计 llvm builtin 函数。 需要你 clone llvm 代码， 根据需求设计代码， 编译成功 ， 提交 patch 给我们。 题目比较复杂， 不是一天能做好的，可以用 ai 做，没有标准答案， 主要考察你的设计能力，对 llvm 的理解能力。 联系方式 gmail：ZmFsbHMuaHVhbmdAZ21haWwuY29t",
+  "source_url": "https://www.v2ex.com/t/1250894"
+}
