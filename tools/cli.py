@@ -194,6 +194,13 @@ def cmd_set_body(args):
     return 0
 
 
+def daily_cap_status(cfg: dict, sent_log: SentLog) -> tuple[bool, int, int]:
+    """每日发送限频。返回 (是否已超限, 今日已发, 每日上限)。cap<=0 视为不设限。"""
+    cap = int((cfg.get("pipeline") or {}).get("max_emails_per_day") or 0)
+    used = sent_log.count_today()
+    return (cap > 0 and used >= cap), used, cap
+
+
 def cmd_send(args):
     if not args.confirm:
         print("❌ 发送需显式 --confirm（默认只准备 ready，不自动发）")
@@ -215,6 +222,10 @@ def cmd_send(args):
     if sent_log.is_sent(lead["contact_email"]):
         print("⚠️ 该邮箱已在发送日志中，跳过")
         return 0
+    exceeded, used, cap = daily_cap_status(cfg, sent_log)
+    if exceeded:
+        print(f"❌ 已达每日发送上限（上限 {cap}，今日已发 {used}），拒绝发送")
+        return 2
     mailer = Mailer(cfg=cfg)
     try:
         pp = resolve_path(cfg, cfg.get("profile_path") or "profile.yaml")
@@ -248,8 +259,15 @@ def cmd_send_all(args):
     if not ready:
         print("没有 ready 线索")
         return 0
-    print(f"将发送 {len(ready)} 封，请再次确认列表：")
-    for x in ready:
+    exceeded, used, cap = daily_cap_status(cfg, sent_log)
+    if exceeded:
+        print(f"❌ 已达每日发送上限（上限 {cap}，今日已发 {used}），拒绝批量发送")
+        return 2
+    remaining = (cap - used) if cap > 0 else len(ready)
+    if remaining < len(ready):
+        print(f"⚠️ 今日剩余额度 {remaining} 封（上限 {cap}，已发 {used}），只发送前 {remaining} 封")
+    print(f"将发送 {min(len(ready), remaining)} 封，请再次确认列表：")
+    for x in ready[:remaining]:
         print(f"  #{x['id']} {x.get('company')} <{x.get('contact_email')}>")
     mailer = Mailer(cfg=cfg)
     try:
@@ -259,7 +277,11 @@ def cmd_send_all(args):
     except Exception:
         pass
     interval = int((cfg.get("pipeline") or {}).get("send_interval_seconds") or 5)
+    sent_this_run = 0
     for lead in ready:
+        if sent_this_run >= remaining:
+            print("已达本次额度，停止发送")
+            break
         if sent_log.is_sent(lead["contact_email"]):
             print(f"跳过已发送 {lead['contact_email']}")
             continue
@@ -272,6 +294,7 @@ def cmd_send_all(args):
         if ok:
             leads.mark_sent(lead["id"])
             sent_log.add(lead["contact_email"], lead.get("company") or "", lead.get("job_title") or "")
+            sent_this_run += 1
         else:
             leads.mark_failed(lead["id"], "smtp failed")
         time.sleep(interval)

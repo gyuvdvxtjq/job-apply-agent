@@ -29,6 +29,13 @@ class SentLog:
         el = email.lower()
         return any(r.get("email", "").lower() == el for r in self._records)
 
+    def count_since(self, since_iso: str) -> int:
+        """ISO 日期字符串按字典序比较，'2026-11-07' 可筛出当天及以后的记录。"""
+        return sum(1 for r in self._records if (r.get("sent_at") or "") >= since_iso)
+
+    def count_today(self) -> int:
+        return self.count_since(datetime.now().date().isoformat())
+
     def get_all(self) -> list[dict]:
         return list(self._records)
 
